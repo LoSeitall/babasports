@@ -1,0 +1,7 @@
+com\oracle\sport\mapper\ProductMapper.class
+com\oracle\sport\mapper\SkuMapper.class
+com\oracle\sport\mapper\OrderMapper.class
+com\oracle\sport\mapper\BuyerMapper.class
+com\oracle\sport\mapper\BrandMapper.class
+com\oracle\sport\mapper\DetailMapper.class
+com\oracle\sport\mapper\ColorMapper.class

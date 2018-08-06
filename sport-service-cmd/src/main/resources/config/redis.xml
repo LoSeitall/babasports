@@ -1,0 +1,98 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.0.xsd
+		http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-4.1.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
+    <!-- redis 集群 -->
+    <!--  <bean id="redisClient" class="redis.clients.jedis.JedisCluster">
+          <constructor-arg name="nodes">
+              <bean class="redis.clients.jedis.HostAndPort">
+                <constructor-arg name="host" value="192.168.10.105"></constructor-arg>
+                <constructor-arg name="port" value="7002"></constructor-arg>
+            </bean>
+            <bean class="redis.clients.jedis.HostAndPort">
+                <constructor-arg name="host" value="192.168.10.77"></constructor-arg>
+                <constructor-arg name="port" value="7002"></constructor-arg>
+            </bean>
+          </constructor-arg>
+     </bean>  -->
+    <!-- 配置redis 单机版 -->
+    <!-- redis数据源 -->
+    <bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <!-- 最大空闲数 -->
+        <property name="maxIdle" value="${redis.maxIdle}" />
+        <!-- 最大空闲数 -->
+        <property name="maxTotal" value="${redis.maxActive}" />
+        <!-- 最大等待时间 -->
+        <property name="maxWaitMillis" value="${redis.maxWait}" />
+        <!-- 返回连接时，检测连接是否成功 -->
+        <property name="testOnBorrow" value="${redis.testOnBorrow}" />
+    </bean>
+
+    <!-- Spring-redis连接池管理工厂 -->
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <!-- IP地址 -->
+        <property name="hostName" value="${redis.host}" />
+        <!-- 端口号 -->
+        <property name="port" value="${redis.port}" />
+        <!-- 超时时间 -->
+        <property name="timeout" value="${redis.timeout}" />
+        <property name="poolConfig" ref="poolConfig" />
+    </bean>
+    <!-- redis模板类，提供了对缓存的增删改查 -->
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+        <property name="connectionFactory" ref="jedisConnectionFactory" />
+        <property name="keySerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+        </property>
+        <property name="valueSerializer">
+            <bean class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer" />
+        </property>
+    </bean>
+
+    <!-- StrRedisTemplate -->
+    <bean id="strRedisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate">
+        <property name="connectionFactory" ref="jedisConnectionFactory" />
+        <property name="keySerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+        </property>
+        <property name="valueSerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+        </property>
+        <property name="hashKeySerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer" />
+        </property>
+    </bean>
+
+    <!-- 使用中间类解决RedisCache.jedisConnectionFactory的静态注入，从而使MyBatis实现第三方缓存 -->
+    <bean id="redisCacheTransfer" class="demo.redis.cache.RedisCacheTransfer">
+        <property name="jedisConnectionFactory" ref="jedisConnectionFactory" />
+    </bean>
+    <!-- //End 单机版Redis集成 -->
+
+    <!-- Redis缓存管理对象 -->
+    <bean id="cacheManager" class="org.springframework.data.redis.cache.RedisCacheManager">
+        <constructor-arg index="0" ref="redisTemplate" />
+    </bean>
+    
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool" >
+    	<constructor-arg name="poolConfig" ref="poolConfig"/>
+    	<constructor-arg name="host" value="${redis.host}"/>
+    	<constructor-arg name="port" value="${redis.port}" type="int" />
+    	<constructor-arg name="timeout" value="${redis.timeout}" type="int" />
+    </bean>
+
+    <!-- 开启Spring缓存 -->
+    <cache:annotation-driven cache-manager="cacheManager"/>
+
+</beans>

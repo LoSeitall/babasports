@@ -1,0 +1,8 @@
+com\oracle\sport\po\Buyer.class
+com\oracle\sport\po\Product.class
+com\oracle\sport\po\Brand.class
+com\oracle\sport\po\Sku.class
+com\oracle\sport\po\Order.class
+com\oracle\sport\po\ProductWithBLOBs.class
+com\oracle\sport\po\Detail.class
+com\oracle\sport\po\Color.class
